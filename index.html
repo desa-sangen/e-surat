@@ -57,49 +57,52 @@ document.body.appendChild(app);
 // render awal (halaman login)
 renderLogin();
 
-// ---------------------------
-// LOGIN FIX TOTAL
-// ---------------------------
-function renderLogin(){
-  const settings = JSON.parse(localStorage.getItem("settings") || 
-    '{"tema":"orange","judul":"E-SURAT DESA SANGEN","username":"admin","password":"1234"}');
-
+<script>
+function renderLogin() {
+  const app = document.getElementById("app");
   app.innerHTML = `
-    <div style="padding:20px;">
-      <h2 style="color:white;text-shadow:1px 1px 2px #000;">🔐 ${settings.judul}</h2>
+    <div style="padding:40px;text-align:center;color:white;">
+      <h2 style="text-shadow:1px 1px 3px #000;">🔐 Login Admin</h2>
       <div style="margin-top:20px;">
-        <label style="color:white;">Username:</label><br>
-        <input id="loginUser" type="text" placeholder="Masukkan username" 
-          style="padding:6px;width:60%;border-radius:5px;border:none;margin-bottom:10px;"><br>
-        <label style="color:white;">Password:</label><br>
-        <input id="loginPass" type="password" placeholder="Masukkan password" 
-          style="padding:6px;width:60%;border-radius:5px;border:none;margin-bottom:20px;"><br>
-        <button id="btnLogin" 
-          style="padding:8px 20px;border:none;border-radius:8px;background:white;color:#333;font-weight:bold;">Masuk</button>
-        <button id="btnReset" 
-          style="padding:8px 20px;border:none;border-radius:8px;background:#ff5555;color:white;font-weight:bold;margin-left:10px;">🔄 Reset Login</button>
+        <input id="loginUser" type="text" placeholder="Username"
+          style="padding:10px;width:220px;border-radius:6px;border:none;"><br><br>
+        <input id="loginPass" type="password" placeholder="Password"
+          style="padding:10px;width:220px;border-radius:6px;border:none;"><br><br>
+        <button id="btnLogin"
+          style="padding:8px 25px;border:none;border-radius:8px;background:#e67e22;color:white;font-weight:bold;cursor:pointer;">
+          Masuk
+        </button>
       </div>
     </div>
   `;
 
-  document.getElementById("btnLogin").addEventListener("click", ()=>{
-    const u = document.getElementById("loginUser").value;
-    const p = document.getElementById("loginPass").value;
-    if(u===settings.username && p===settings.password){
-      localStorage.setItem("logged","true");
-      renderMenu();
-    }else{
-      alert("❌ Username atau password salah!");
+  const btn = document.getElementById("btnLogin");
+  if (btn) {
+    btn.addEventListener("click", () => {
+      const u = document.getElementById("loginUser").value.trim();
+      const p = document.getElementById("loginPass").value.trim();
+      const saved = JSON.parse(localStorage.getItem("settings") || "{}");
+      const username = saved.username || "admin";
+      const password = saved.password || "1234";
+
+      if (u === username && p === password) {
+        localStorage.setItem("logged", "true");
+        renderMenu();
+      } else {
+        alert("❌ Username atau password salah!");
+      }
+    });
+  }
+
+  // biar bisa tekan Enter langsung login
+  document.addEventListener("keypress", e => {
+    if (e.key === "Enter") {
+      const u = document.getElementById("loginUser");
+      const p = document.getElementById("loginPass");
+      if (u && p && document.activeElement !== btn) btn.click();
     }
   });
-
-  // tekan ENTER juga bisa login
-  document.addEventListener("keydown", function(e){
-    if(e.key === "Enter"){
-      document.getElementById("btnLogin").click();
-    }
-  });
-
+}
   // tombol reset login
   document.getElementById("btnReset").addEventListener("click", ()=>{
     if(confirm("Yakin ingin reset username & password ke default (admin/1234)?")){
@@ -550,6 +553,7 @@ renderMenu = function() {
 
 </body>
 </html>
+
 
 
 
