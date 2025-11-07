@@ -57,7 +57,7 @@ document.body.appendChild(app);
 // render awal (halaman login)
 renderLogin();
 
-<script>
+
 function renderLogin() {
   const app = document.getElementById("app");
   app.innerHTML = `
@@ -116,7 +116,7 @@ function renderLogin() {
       location.reload();
     }
   });
-}
+
 
 function renderMenu() {
   app.innerHTML = `
@@ -445,7 +445,7 @@ function exportBackup() {
 // ---------------------------
 // MODE PUBLIK FIX – tombol kembali berfungsi
 // ---------------------------
-<script>
+
 function renderPublik() {
   const dataMasuk = JSON.parse(localStorage.getItem("suratMasuk") || "[]");
   const dataKeluar = JSON.parse(localStorage.getItem("suratKeluar") || "[]");
@@ -504,7 +504,7 @@ function renderPublik() {
     });
   }
 }
-<script>
+
   styleMenuButtons();
 
   // kasih waktu 200ms supaya tombol bener-bener sudah muncul
@@ -523,13 +523,13 @@ function renderPublik() {
       alert("Tombol kembali tidak ditemukan!");
     }
   },200);
-}
+
 
 
 // ---------------------------
 // Update menu utama: tambah Mode Publik & Pengaturan
 // ---------------------------
-  <script>
+
 const oldRenderMenu = renderMenu;
 renderMenu = function() {
   app.innerHTML = `
@@ -553,7 +553,6 @@ renderMenu = function() {
 
 </body>
 </html>
-
 
 
 
