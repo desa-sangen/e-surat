@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E-SURAT DESA SANGEN v2 FINAL</title>
+  <style>
+    body {
+      margin:0;
+      font-family:Arial, sans-serif;
+      background:#ffb347; /* oranye lembut */
+    }
+    header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      background:#ff8c00;
+      color:white;
+      padding:10px 20px;
+    }
+    header img {height:70px;}
+    header h1 {
+      flex:1;
+      text-align:center;
+      font-size:24px;
+      text-shadow:1px 1px 2px #00000055;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="logo_kabupaten_magelang.png" alt="Kabupaten Magelang" />
+    <h1>E-SURAT DESA SANGEN</h1>
+    <img src="logo_provinsi_jawa_tengah.png" alt="Provinsi Jawa Tengah" />
+  </header>
+
+  <!-- nanti di bawah sini akan kita tempel semua script aplikasi -->
+ <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script>
+// ---------------------------
+// E-SURAT DESA SANGEN v2  –  Bagian 1
+// ---------------------------
+
+// data utama
+const LS_STATE = "esurat_sangen_v2_data";
+let data = JSON.parse(localStorage.getItem(LS_STATE) || "{}");
+if (!data.suratMasuk) data.suratMasuk = [];
+if (!data.suratKeluar) data.suratKeluar = [];
+if (!data.arsip) data.arsip = [];
+
+// elemen utama
+const app = document.createElement("div");
+app.id = "app";
+document.body.appendChild(app);
+
+// render awal (halaman login)
+renderLogin();
+
+// ---------------------------
+// LOGIN FIX TOTAL
+// ---------------------------
+function renderLogin(){
+  app.innerHTML = `
+    <div style="padding:40px;text-align:center;color:white;">
+      <h2>Login Admin</h2>
+      <input id="username" placeholder="Username" style="padding:10px;width:220px;margin-bottom:10px;"><br>
+      <input id="password" type="password" placeholder="Password" style="padding:10px;width:220px;"><br><br>
+      <button id="btnLogin" class="menuBtn">Masuk</button>
+    </div>
+  `;
+
+  styleMenuButtons();
+
+  const btnLogin = document.getElementById("btnLogin");
+  const username = document.getElementById("username");
+  const password = document.getElementById("password");
+
+  // klik tombol
+  btnLogin.addEventListener("click", login);
+
+  // tekan Enter di input username / password
+  [username, password].forEach(el => {
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") login();
+    });
+  });
+}
+
+// fungsi login dasar (pastikan ada)
+function login(){
+  const user = document.getElementById("username").value.trim();
+  const pass = document.getElementById("password").value.trim();
+
+  // contoh login sederhana, bisa diganti sesuai kebutuhan
+  if(user === "admin" && pass === "admin"){
+    sessionStorage.setItem("loggedIn","true");
+    renderMenu();
+  } else {
+    alert("Username atau password salah!");
+  }
+}
+
+
+function renderMenu() {
+  app.innerHTML = `
+    <div style="padding:20px;">
+      <h2 style="color:white;text-shadow:1px 1px 2px #000;">Menu Utama</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;">
+        <button class="menuBtn" onclick="renderSurat('masuk')">📥 Surat Masuk</button>
+        <button class="menuBtn" onclick="renderSurat('keluar')">📤 Surat Keluar</button>
+        <button class="menuBtn" onclick="renderArsip()">🗄️ Arsip</button>
+        <button class="menuBtn" onclick="renderPengaturan()">⚙️ Pengaturan</button>
+        <button class="menuBtn" onclick="logout()">🚪 Keluar</button>
+      </div>
+    </div>
+  `;
+  styleMenuButtons();
+}
+
+function styleMenuButtons() {
+  const btns = document.querySelectorAll(".menuBtn");
+  btns.forEach(btn=>{
+    btn.style.background="#fff";
+    btn.style.border="0";
+    btn.style.borderRadius="8px";
+    btn.style.padding="10px 20px";
+    btn.style.cursor="pointer";
+    btn.style.color="#ff8c00";
+    btn.style.fontWeight="bold";
+    btn.onmouseover=()=>btn.style.background="#ffe6c2";
+    btn.onmouseout=()=>btn.style.background="#fff";
+  });
+}
+
+function logout(){
+  localStorage.removeItem("login_sangen");
+  renderLogin();
+}
+
+// placeholder sementara untuk menu lain
+function renderSurat(jenis){alert("Halaman surat "+jenis+" (Bagian 2 nanti)");}
+function renderArsip(){alert("Halaman arsip (Bagian 3 nanti)");}
+function renderPengaturan(){alert("Halaman pengaturan (Bagian 4 nanti)");}
+// ---------------------------
+// E-SURAT DESA SANGEN v2 – Bagian 2
+// Modul Surat Masuk & Keluar
+// ---------------------------
+
+function renderSurat(jenis){
+  const daftar = jenis === "masuk" ? data.suratMasuk : data.suratKeluar;
+  app.innerHTML = `
+    <div style="padding:20px;">
+      <h2 style="color:white;text-shadow:1px 1px 2px #000;">Surat ${jenis === "masuk" ? "Masuk" : "Keluar"}</h2>
+      <button id="btnTambah" class="menuBtn">➕ Tambah Surat</button>
+      <button id="btnKembali" class="menuBtn">⬅️ Kembali</button>
+      <table border="1" cellspacing="0" cellpadding="6" style="margin-top:10px;width:100%;background:white;border-radius:6px;">
+        <thead style="background:#ff8c00;color:white;">
+          <tr>
+            <th>No</th>
+            <th>Nomor Surat</th>
+            <th>Tanggal</th>
+            <th>Perihal</th>
+            <th>Pengirim/Penerima</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="isiTabel"></tbody>
+      </table>
+    </div>
+  `;
+  styleMenuButtons();
+
+  document.getElementById("btnKembali").onclick = renderMenu;
+  document.getElementById("btnTambah").onclick = ()=>formSurat(jenis);
+  isiTabelSurat(daftar, jenis);
+}
+
+function isiTabelSurat(list, jenis){
+  const tb = document.getElementById("isiTabel");
+  tb.innerHTML = list.length ? list.map((s,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td>${s.nomor}</td>
+      <td>${s.tanggal}</td>
+      <td>${s.perihal}</td>
+      <td>${s.asalTujuan}</td>
+      <td>
+        <button onclick="hapusSurat('${jenis}',${i})" style="background:#ff4500;color:white;border:0;border-radius:4px;padding:4px 8px;">Hapus</button>
+        <button onclick="arsipkanSurat('${jenis}',${i})" style="background:#32cd32;color:white;border:0;border-radius:4px;padding:4px 8px;">Arsip</button>
+      </td>
+    </tr>`).join("") : `<tr><td colspan="6" style="text-align:center;">Belum ada surat</td></tr>`;
+}
+
+function formSurat(jenis){
+  app.innerHTML = `
+    <div style="padding:20px;">
+      <h2 style="color:white;">Tambah Surat ${jenis === "masuk" ? "Masuk" : "Keluar"}</h2>
+      <div style="background:white;padding:15px;border-radius:8px;max-width:500px;">
+        <label>Nomor Surat</label><br>
+        <input id="fNomor" style="width:100%;margin-bottom:10px;"><br>
+        <label>Tanggal</label><br>
+        <input id="fTanggal" type="date" style="width:100%;margin-bottom:10px;"><br>
+        <label>Perihal</label><br>
+        <input id="fPerihal" style="width:100%;margin-bottom:10px;"><br>
+        <label>${jenis==="masuk"?"Pengirim":"Penerima"}</label><br>
+        <input id="fAsal" style="width:100%;margin-bottom:10px;"><br>
+        <button id="btnSimpan" class="menuBtn">💾 Simpan</button>
+        <button id="btnBatal" class="menuBtn">❌ Batal</button>
+      </div>
+    </div>
+  `;
+  styleMenuButtons();
+
+  document.getElementById("btnSimpan").onclick = ()=>{
+    const s = {
+      nomor: fNomor.value.trim(),
+      tanggal: fTanggal.value,
+      perihal: fPerihal.value.trim(),
+      asalTujuan: fAsal.value.trim()
+    };
+    if(!s.nomor || !s.tanggal || !s.perihal || !s.asalTujuan){
+      alert("Lengkapi semua data!");
+      return;
+    }
+    if(jenis==="masuk") data.suratMasuk.push(s);
+    else data.suratKeluar.push(s);
+    simpanData();
+    alert("Data tersimpan!");
+    renderSurat(jenis);
+  };
+
+  document.getElementById("btnBatal").onclick = ()=>renderSurat(jenis);
+}
+
+function hapusSurat(jenis, idx){
+  if(confirm("Yakin mau hapus surat ini?")){
+    if(jenis==="masuk") data.suratMasuk.splice(idx,1);
+    else data.suratKeluar.splice(idx,1);
+    simpanData();
+    renderSurat(jenis);
+  }
+}
+
+function arsipkanSurat(jenis, idx){
+  const surat = (jenis==="masuk"?data.suratMasuk:data.suratKeluar)[idx];
+  surat.jenis = jenis;
+  data.arsip.push(surat);
+  hapusSurat(jenis, idx);
+  simpanData();
+  alert("Surat diarsipkan!");
+}
+
+function simpanData(){
+  localStorage.setItem(LS_STATE, JSON.stringify(data));
+}
+// ---------------------------
+// E-SURAT DESA SANGEN v2 – Bagian 3
+// Modul Arsip, Restore, Export Excel, Cetak
+// ---------------------------
+
+function renderArsip(){
+  const arsip = data.arsip || [];
+  app.innerHTML = `
+    <div style="padding:20px;">
+      <h2 style="color:white;text-shadow:1px 1px 2px #000;">Arsip Surat</h2>
+      <button id="btnKembali" class="menuBtn">⬅️ Kembali</button>
+      <button id="btnExport" class="menuBtn">📤 Export Excel</button>
+      <table border="1" cellspacing="0" cellpadding="6" style="margin-top:10px;width:100%;background:white;border-radius:6px;">
+        <thead style="background:#ff8c00;color:white;">
+          <tr>
+            <th>No</th>
+            <th>Nomor Surat</th>
+            <th>Tanggal</th>
+            <th>Perihal</th>
+            <th>Pengirim/Penerima</th>
+            <th>Jenis</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tabelArsip"></tbody>
+      </table>
+    </div>
+  `;
+  styleMenuButtons();
+  document.getElementById("btnKembali").onclick = renderMenu;
+  document.getElementById("btnExport").onclick = exportExcel;
+  isiTabelArsip(arsip);
+}
+
+function isiTabelArsip(list){
+  const tb = document.getElementById("tabelArsip");
+  tb.innerHTML = list.length ? list.map((s,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td>${s.nomor}</td>
+      <td>${s.tanggal}</td>
+      <td>${s.perihal}</td>
+      <td>${s.asalTujuan}</td>
+      <td>${s.jenis}</td>
+      <td>
+        <button onclick="restoreSurat(${i})" style="background:#00b300;color:white;border:0;border-radius:4px;padding:4px 8px;">Restore</button>
+        <button onclick="hapusArsip(${i})" style="background:#ff4500;color:white;border:0;border-radius:4px;padding:4px 8px;">Hapus</button>
+      </td>
+    </tr>`).join("") : `<tr><td colspan="7" style="text-align:center;">Belum ada arsip</td></tr>`;
+}
+
+function restoreSurat(i){
+  const s = data.arsip[i];
+  if(confirm("Kembalikan surat ke daftar "+s.jenis+"?")){
+    if(s.jenis==="masuk") data.suratMasuk.push(s);
+    else data.suratKeluar.push(s);
+    data.arsip.splice(i,1);
+    simpanData();
+    renderArsip();
+  }
+}
+
+function hapusArsip(i){
+  if(confirm("Hapus arsip ini permanen?")){
+    data.arsip.splice(i,1);
+    simpanData();
+    renderArsip();
+  }
+}
+function exportExcel(){
+  const wb = XLSX.utils.book_new();
+  const ws_data = [
+    ["Nomor Surat","Tanggal","Perihal","Pengirim/Penerima","Jenis"],
+    ...data.arsip.map(s=>[s.nomor, s.tanggal, s.perihal, s.asalTujuan, s.jenis])
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+  // Style header (opsional, warna oranye)
+  const headerRange = XLSX.utils.decode_range(ws['!ref']);
+  for(let C = headerRange.s.c; C <= headerRange.e.c; ++C){
+    const cellAddress = XLSX.utils.encode_cell({r:0, c:C});
+    if(!ws[cellAddress]) continue;
+    ws[cellAddress].s = {
+      fill: { fgColor: { rgb: "FFA500" } },
+      font: { bold:true, color:{rgb:"FFFFFF"} },
+      alignment: { horizontal: "center" }
+    };
+  }
+
+  ws['!cols'] = [
+    {wch:20},{wch:15},{wch:30},{wch:30},{wch:10}
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, "Arsip Surat");
+  XLSX.writeFile(wb, "Arsip_E-Surat_Desa_Sangen.xlsx");
+}
+// ---------------------------
+// E-SURAT DESA SANGEN v2 – Bagian 4
+// Pengaturan + Animasi + Mode Publik
+// ---------------------------
+
+// animasi transisi antar halaman
+function fadeTo(html) {
+  app.style.opacity = 0;
+  setTimeout(() => {
+    app.innerHTML = html;
+    app.style.opacity = 1;
+  }, 200);
+}
+
+// render pengaturan
+function renderPengaturan(){
+  fadeTo(`
+    <div style="padding:20px;color:white;">
+      <h2>⚙️ Pengaturan</h2>
+      <div style="background:white;color:black;padding:15px;border-radius:8px;max-width:500px;">
+        <label>Nama Desa</label><br>
+        <input id="namaDesa" style="width:100%;margin-bottom:10px;" value="${data.namaDesa || "Desa Sangen"}"><br>
+        <button id="btnSimpanDesa" class="menuBtn">💾 Simpan</button>
+        <hr>
+        <button id="btnBackup" class="menuBtn">⬇️ Export Data (Backup)</button>
+        <button id="btnKembali" class="menuBtn">⬅️ Kembali</button>
+      </div>
+    </div>
+  `);
+  styleMenuButtons();
+  document.getElementById("btnKembali").onclick = renderMenu;
+  document.getElementById("btnSimpanDesa").onclick = ()=>{
+    data.namaDesa = document.getElementById("namaDesa").value.trim();
+    simpanData();
+    alert("Nama desa disimpan!");
+  };
+  document.getElementById("btnBackup").onclick = exportBackup;
+}
+
+function exportBackup(){
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "Backup_E-Surat_Desa_Sangen.json";
+  link.click();
+  alert("Data berhasil diekspor (backup JSON)");
+}
+// ---------------------------
+// MODE PUBLIK FIX – tombol kembali berfungsi
+// ---------------------------
+function renderPublik(){
+  fadeTo(`
+    <div style="padding:20px;">
+      <h2 style="color:white;">📋 Mode Publik – Daftar Surat</h2>
+      <table border="1" cellspacing="0" cellpadding="6" style="margin-top:10px;width:100%;background:white;border-radius:6px;">
+        <thead style="background:#ff8c00;color:white;">
+          <tr>
+            <th>No</th>
+            <th>Nomor Surat</th>
+            <th>Tanggal</th>
+            <th>Perihal</th>
+            <th>Pengirim/Penerima</th>
+            <th>Jenis</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${
+            [...(data.suratMasuk||[]).map(s=>({...s,jenis:"Masuk"})),
+             ...(data.suratKeluar||[]).map(s=>({...s,jenis:"Keluar"}))]
+            .map((s,i)=>`
+              <tr>
+                <td>${i+1}</td>
+                <td>${s.nomor}</td>
+                <td>${s.tanggal}</td>
+                <td>${s.perihal}</td>
+                <td>${s.asalTujuan}</td>
+                <td>${s.jenis}</td>
+              </tr>`).join("")
+          }
+        </tbody>
+      </table>
+      <div style="margin-top:15px;text-align:center;">
+        <button id="btnKembaliPublik" class="menuBtn">⬅️ Kembali</button>
+      </div>
+    </div>
+  `);
+
+  styleMenuButtons();
+
+  // kasih waktu 200ms supaya tombol bener-bener sudah muncul
+  setTimeout(()=>{
+    const btn = document.getElementById("btnKembaliPublik");
+    if(btn){
+      btn.addEventListener("click", ()=>{
+        // kalau admin login, balik ke menu utama
+        if(sessionStorage.getItem("loggedIn")==="true"){
+          renderMenu();
+        } else {
+          renderLogin();
+        }
+      });
+    } else {
+      alert("Tombol kembali tidak ditemukan!");
+    }
+  },200);
+}
+
+
+// ---------------------------
+// Update menu utama: tambah Mode Publik & Pengaturan
+// ---------------------------
+const oldRenderMenu = renderMenu;
+renderMenu = function(){
+  app.innerHTML = `
+    <div style="padding:20px;">
+      <h2 style="color:white;text-shadow:1px 1px 2px #000;">Menu Utama</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;">
+        <button class="menuBtn" onclick="renderSurat('masuk')">📥 Surat Masuk</button>
+        <button class="menuBtn" onclick="renderSurat('keluar')">📤 Surat Keluar</button>
+        <button class="menuBtn" onclick="renderArsip()">🗄️ Arsip</button>
+        <button class="menuBtn" onclick="renderPublik()">👁️ Mode Publik</button>
+        <button class="menuBtn" onclick="renderPengaturan()">⚙️ Pengaturan</button>
+        <button class="menuBtn" onclick="logout()">🚪 Keluar</button>
+      </div>
+    </div>
+  `;
+  styleMenuButtons();
+};
+
+
+</script>
+
+</body>
+</html>
