@@ -185,6 +185,58 @@ function renderPengaturan(){alert("Halaman pengaturan (Bagian 4 nanti)");}
 // ---------------------------
 
 function renderSurat(jenis){
+  const app = document.getElementById("app");
+  const key = jenis === "masuk" ? "suratMasuk" : "suratKeluar";
+  let data = JSON.parse(localStorage.getItem(key) || "[]");
+
+  const refresh = () => {
+    app.innerHTML = `
+      <div style="padding:20px;">
+        <h2 style="color:white;text-shadow:1px 1px 2px #000;">
+          ${jenis === "masuk" ? "📥 Surat Masuk" : "📤 Surat Keluar"}
+        </h2>
+
+        <div style="margin-bottom:10px;">
+          <button onclick="addSurat('${jenis}')" style="background:#27ae60;color:white;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;">
+            ➕ Tambah Surat
+          </button>
+          <button onclick="renderMenu()" style="background:#e67e22;color:white;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;">
+            🔙 Kembali
+          </button>
+        </div>
+
+        <table border="1" cellspacing="0" cellpadding="6" style="width:100%;background:white;border-collapse:collapse;">
+          <thead style="background:#f39c12;color:white;">
+            <tr>
+              <th>No</th>
+              <th>Nomor Surat</th>
+              <th>Tanggal</th>
+              <th>Perihal</th>
+              <th>${jenis === "masuk" ? "Asal Surat" : "Tujuan Surat"}</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map((s, i) => `
+              <tr>
+                <td>${i+1}</td>
+                <td>${s.nomor}</td>
+                <td>${s.tanggal}</td>
+                <td>${s.perihal}</td>
+                <td>${s.asalTujuan}</td>
+                <td>
+                  <button onclick="editSurat('${jenis}', ${i})" style="background:#3498db;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">✏️ Edit</button>
+                  <button onclick="hapusSurat('${jenis}', ${i})" style="background:#e74c3c;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">🗑️ Hapus</button>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+  };
+  refresh();
+}
   const daftar = jenis === "masuk" ? data.suratMasuk : data.suratKeluar;
   app.innerHTML = `
     <div style="padding:20px;">
@@ -198,7 +250,7 @@ function renderSurat(jenis){
             <th>Nomor Surat</th>
             <th>Tanggal</th>
             <th>Perihal</th>
-            <th>Pengirim/Penerima</th>
+            <th>Pengirim/pengirim</th>
             <th>Aksi</th>
           </tr>
         </thead>
@@ -211,8 +263,60 @@ function renderSurat(jenis){
   document.getElementById("btnKembali").onclick = renderMenu;
   document.getElementById("btnTambah").onclick = ()=>formSurat(jenis);
   isiTabelSurat(daftar, jenis);
-}
 
+function renderSurat(jenis){
+  const app = document.getElementById("app");
+  const key = jenis === "masuk" ? "suratMasuk" : "suratKeluar";
+  let data = JSON.parse(localStorage.getItem(key) || "[]");
+
+  const refresh = () => {
+    app.innerHTML = `
+      <div style="padding:20px;">
+        <h2 style="color:white;text-shadow:1px 1px 2px #000;">
+          ${jenis === "masuk" ? "📥 Surat Masuk" : "📤 Surat Keluar"}
+        </h2>
+
+        <div style="margin-bottom:10px;">
+          <button onclick="addSurat('${jenis}')" style="background:#27ae60;color:white;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;">
+            ➕ Tambah Surat
+          </button>
+          <button onclick="renderMenu()" style="background:#e67e22;color:white;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;">
+            🔙 Kembali
+          </button>
+        </div>
+
+        <table border="1" cellspacing="0" cellpadding="6" style="width:100%;background:white;border-collapse:collapse;">
+          <thead style="background:#f39c12;color:white;">
+            <tr>
+              <th>No</th>
+              <th>Nomor Surat</th>
+              <th>Tanggal</th>
+              <th>Perihal</th>
+              <th>${jenis === "masuk" ? "Asal Surat" : "Tujuan Surat"}</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map((s, i) => `
+              <tr>
+                <td>${i+1}</td>
+                <td>${s.nomor}</td>
+                <td>${s.tanggal}</td>
+                <td>${s.perihal}</td>
+                <td>${s.asalTujuan}</td>
+                <td>
+                  <button onclick="editSurat('${jenis}', ${i})" style="background:#3498db;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">✏️ Edit</button>
+                  <button onclick="hapusSurat('${jenis}', ${i})" style="background:#e74c3c;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">🗑️ Hapus</button>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+  };
+  refresh();
+}
 function isiTabelSurat(list, jenis){
   const tb = document.getElementById("isiTabel");
   tb.innerHTML = list.length ? list.map((s,i)=>`
@@ -269,7 +373,46 @@ function formSurat(jenis){
 
   document.getElementById("btnBatal").onclick = ()=>renderSurat(jenis);
 }
+function editSurat(jenis, index){
+  const key = jenis === "masuk" ? "suratMasuk" : "suratKeluar";
+  let data = JSON.parse(localStorage.getItem(key) || "[]");
+  const s = data[index];
+  const app = document.getElementById("app");
 
+  app.innerHTML = `
+    <div style="padding:20px;color:white;">
+      <h2 style="text-shadow:1px 1px 2px #000;">✏️ Edit Surat ${jenis === "masuk" ? "Masuk" : "Keluar"}</h2>
+      <div style="background:rgba(255,255,255,0.2);padding:20px;border-radius:10px;width:350px;">
+        <label>Nomor Surat:</label><br>
+        <input id="nomor" type="text" value="${s.nomor}" style="width:100%;padding:6px;"><br><br>
+        <label>Tanggal:</label><br>
+        <input id="tanggal" type="date" value="${s.tanggal}" style="width:100%;padding:6px;"><br><br>
+        <label>Perihal:</label><br>
+        <input id="perihal" type="text" value="${s.perihal}" style="width:100%;padding:6px;"><br><br>
+        <label>${jenis === "masuk" ? "Asal Surat:" : "Tujuan Surat:"}</label><br>
+        <input id="asalTujuan" type="text" value="${s.asalTujuan}" style="width:100%;padding:6px;"><br><br>
+        <button onclick="simpanEdit('${jenis}', ${index})" style="background:#27ae60;color:white;padding:8px 15px;border:none;border-radius:6px;">💾 Simpan</button>
+        <button onclick="renderSurat('${jenis}')" style="background:#e67e22;color:white;padding:8px 15px;border:none;border-radius:6px;">🔙 Batal</button>
+      </div>
+    </div>
+  `;
+}
+
+function simpanEdit(jenis, index){
+  const key = jenis === "masuk" ? "suratMasuk" : "suratKeluar";
+  let data = JSON.parse(localStorage.getItem(key) || "[]");
+
+  data[index] = {
+    nomor: document.getElementById("nomor").value,
+    tanggal: document.getElementById("tanggal").value,
+    perihal: document.getElementById("perihal").value,
+    asalTujuan: document.getElementById("asalTujuan").value
+  };
+
+  localStorage.setItem(key, JSON.stringify(data));
+  alert("✅ Data surat berhasil diperbarui!");
+  renderSurat(jenis);
+}
 function hapusSurat(jenis, idx){
   if(confirm("Yakin mau hapus surat ini?")){
     if(jenis==="masuk") data.suratMasuk.splice(idx,1);
