@@ -431,9 +431,7 @@ function simpanPengaturan() {
   alert("✅ Pengaturan disimpan!");
   location.reload();
 }
-</script>
-
-function exportBackup(){
+function exportBackup() {
   const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
@@ -503,7 +501,7 @@ function renderPublik() {
     });
   }
 }
-</script>
+<script>
   styleMenuButtons();
 
   // kasih waktu 200ms supaya tombol bener-bener sudah muncul
@@ -528,8 +526,9 @@ function renderPublik() {
 // ---------------------------
 // Update menu utama: tambah Mode Publik & Pengaturan
 // ---------------------------
+  <script>
 const oldRenderMenu = renderMenu;
-renderMenu = function(){
+renderMenu = function() {
   app.innerHTML = `
     <div style="padding:20px;">
       <h2 style="color:white;text-shadow:1px 1px 2px #000;">Menu Utama</h2>
@@ -551,6 +550,7 @@ renderMenu = function(){
 
 </body>
 </html>
+
 
 
 
