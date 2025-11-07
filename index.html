@@ -61,46 +61,59 @@ renderLogin();
 // LOGIN FIX TOTAL
 // ---------------------------
 function renderLogin(){
+  const settings = JSON.parse(localStorage.getItem("settings") || 
+    '{"tema":"orange","judul":"E-SURAT DESA SANGEN","username":"admin","password":"1234"}');
+
   app.innerHTML = `
-    <div style="padding:40px;text-align:center;color:white;">
-      <h2>Login Admin</h2>
-      <input id="username" placeholder="Username" style="padding:10px;width:220px;margin-bottom:10px;"><br>
-      <input id="password" type="password" placeholder="Password" style="padding:10px;width:220px;"><br><br>
-      <button id="btnLogin" class="menuBtn">Masuk</button>
+    <div style="padding:20px;">
+      <h2 style="color:white;text-shadow:1px 1px 2px #000;">🔐 ${settings.judul}</h2>
+      <div style="margin-top:20px;">
+        <label style="color:white;">Username:</label><br>
+        <input id="loginUser" type="text" placeholder="Masukkan username" 
+          style="padding:6px;width:60%;border-radius:5px;border:none;margin-bottom:10px;"><br>
+        <label style="color:white;">Password:</label><br>
+        <input id="loginPass" type="password" placeholder="Masukkan password" 
+          style="padding:6px;width:60%;border-radius:5px;border:none;margin-bottom:20px;"><br>
+        <button id="btnLogin" 
+          style="padding:8px 20px;border:none;border-radius:8px;background:white;color:#333;font-weight:bold;">Masuk</button>
+        <button id="btnReset" 
+          style="padding:8px 20px;border:none;border-radius:8px;background:#ff5555;color:white;font-weight:bold;margin-left:10px;">🔄 Reset Login</button>
+      </div>
     </div>
   `;
 
-  styleMenuButtons();
+  document.getElementById("btnLogin").addEventListener("click", ()=>{
+    const u = document.getElementById("loginUser").value;
+    const p = document.getElementById("loginPass").value;
+    if(u===settings.username && p===settings.password){
+      localStorage.setItem("logged","true");
+      renderMenu();
+    }else{
+      alert("❌ Username atau password salah!");
+    }
+  });
 
-  const btnLogin = document.getElementById("btnLogin");
-  const username = document.getElementById("username");
-  const password = document.getElementById("password");
+  // tekan ENTER juga bisa login
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){
+      document.getElementById("btnLogin").click();
+    }
+  });
 
-  // klik tombol
-  btnLogin.addEventListener("click", login);
-
-  // tekan Enter di input username / password
-  [username, password].forEach(el => {
-    el.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") login();
-    });
+  // tombol reset login
+  document.getElementById("btnReset").addEventListener("click", ()=>{
+    if(confirm("Yakin ingin reset username & password ke default (admin/1234)?")){
+      localStorage.setItem("settings", JSON.stringify({
+        tema: "orange",
+        judul: "E-SURAT DESA SANGEN",
+        username: "admin",
+        password: "1234"
+      }));
+      alert("✅ Login berhasil direset ke admin / 1234");
+      location.reload();
+    }
   });
 }
-
-// fungsi login dasar (pastikan ada)
-function login(){
-  const user = document.getElementById("username").value.trim();
-  const pass = document.getElementById("password").value.trim();
-
-  // contoh login sederhana, bisa diganti sesuai kebutuhan
-  if(user === "admin" && pass === "admin"){
-    sessionStorage.setItem("loggedIn","true");
-    renderMenu();
-  } else {
-    alert("Username atau password salah!");
-  }
-}
-
 
 function renderMenu() {
   app.innerHTML = `
@@ -365,29 +378,59 @@ function fadeTo(html) {
 }
 
 // render pengaturan
-function renderPengaturan(){
-  fadeTo(`
-    <div style="padding:20px;color:white;">
-      <h2>⚙️ Pengaturan</h2>
-      <div style="background:white;color:black;padding:15px;border-radius:8px;max-width:500px;">
-        <label>Nama Desa</label><br>
-        <input id="namaDesa" style="width:100%;margin-bottom:10px;" value="${data.namaDesa || "Desa Sangen"}"><br>
-        <button id="btnSimpanDesa" class="menuBtn">💾 Simpan</button>
-        <hr>
-        <button id="btnBackup" class="menuBtn">⬇️ Export Data (Backup)</button>
-        <button id="btnKembali" class="menuBtn">⬅️ Kembali</button>
-      </div>
+function renderPengaturan() {
+  const settings = JSON.parse(localStorage.getItem("settings") || 
+    '{"tema":"orange","judul":"E-SURAT DESA SANGEN","username":"admin","password":"1234"}');
+  
+  const app = document.getElementById("app");
+  if (!app) return alert("Elemen utama tidak ditemukan!");
+
+  app.innerHTML = `
+    <div style="padding:20px;">
+      <h2 style="color:white;text-shadow:1px 1px 2px #000;">⚙️ Pengaturan Aplikasi</h2>
+
+      <label style="color:white;">Judul Aplikasi:</label><br>
+      <input id="judulInput" type="text" value="${settings.judul}" 
+        style="padding:6px;width:60%;border-radius:5px;border:none;margin-bottom:10px;"><br>
+
+      <label style="color:white;">Warna Tema:</label><br>
+      <select id="temaSelect" style="padding:6px;width:60%;border-radius:5px;border:none;margin-bottom:20px;">
+        <option value="orange" ${settings.tema==="orange"?"selected":""}>Oranye</option>
+        <option value="blue" ${settings.tema==="blue"?"selected":""}>Biru</option>
+      </select><br>
+
+      <hr style="margin:20px 0;border-color:#fff3;">
+      <label style="color:white;">Username Admin:</label><br>
+      <input id="userInput" type="text" value="${settings.username}" 
+        style="padding:6px;width:60%;border-radius:5px;border:none;margin-bottom:10px;"><br>
+
+      <label style="color:white;">Password Admin:</label><br>
+      <input id="passInput" type="password" value="${settings.password}" 
+        style="padding:6px;width:60%;border-radius:5px;border:none;margin-bottom:20px;"><br>
+
+      <button onclick="simpanPengaturan()" 
+        style="padding:8px 20px;border:none;border-radius:8px;background:white;color:#333;font-weight:bold;">💾 Simpan</button>
+      <button id="btnKembali" 
+        style="padding:8px 20px;border:none;border-radius:8px;background:#e67e22;color:white;font-weight:bold;margin-left:10px;">🔙 Kembali</button>
     </div>
-  `);
-  styleMenuButtons();
-  document.getElementById("btnKembali").onclick = renderMenu;
-  document.getElementById("btnSimpanDesa").onclick = ()=>{
-    data.namaDesa = document.getElementById("namaDesa").value.trim();
-    simpanData();
-    alert("Nama desa disimpan!");
-  };
-  document.getElementById("btnBackup").onclick = exportBackup;
+  `;
+
+  document.getElementById("btnKembali").addEventListener("click", function(){
+    renderMenu();
+  });
 }
+
+function simpanPengaturan() {
+  const judul = document.getElementById("judulInput").value;
+  const tema = document.getElementById("temaSelect").value;
+  const username = document.getElementById("userInput").value || "admin";
+  const password = document.getElementById("passInput").value || "1234";
+
+  localStorage.setItem("settings", JSON.stringify({judul, tema, username, password}));
+  alert("✅ Pengaturan disimpan!");
+  location.reload();
+}
+</script>
 
 function exportBackup(){
   const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
@@ -484,4 +527,5 @@ renderMenu = function(){
 
 </body>
 </html>
+
 
