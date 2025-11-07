@@ -445,18 +445,21 @@ function exportBackup(){
 // MODE PUBLIK FIX – tombol kembali berfungsi
 // ---------------------------
 <script>
-function renderPublik(){
+function renderPublik() {
   const dataMasuk = JSON.parse(localStorage.getItem("suratMasuk") || "[]");
   const dataKeluar = JSON.parse(localStorage.getItem("suratKeluar") || "[]");
-  const semua = [...dataMasuk.map(s => ({...s, jenis:"Masuk"})), 
-                 ...dataKeluar.map(s => ({...s, jenis:"Keluar"}))];
+  const semua = [
+    ...dataMasuk.map(s => ({ ...s, jenis: "Masuk" })),
+    ...dataKeluar.map(s => ({ ...s, jenis: "Keluar" }))
+  ];
 
   const app = document.getElementById("app");
   app.innerHTML = `
     <div style="padding:20px;">
       <h2 style="color:white;text-shadow:1px 1px 2px #000;">👁️ Mode Publik – Daftar Surat</h2>
-      <table border="1" cellspacing="0" cellpadding="6" style="width:100%;background:white;border-collapse:collapse;">
-        <thead style="background:#f1c40f;">
+      <table border="1" cellspacing="0" cellpadding="6" 
+             style="width:100%;background:white;border-collapse:collapse;font-size:14px;">
+        <thead style="background:#f39c12;color:white;">
           <tr>
             <th>No</th>
             <th>Nomor Surat</th>
@@ -470,35 +473,37 @@ function renderPublik(){
           ${semua.map((s,i)=>`
             <tr>
               <td>${i+1}</td>
-              <td>${s.nomor}</td>
-              <td>${s.tanggal}</td>
-              <td>${s.perihal}</td>
-              <td>${s.asalTujuan}</td>
+              <td>${s.nomor || "-"}</td>
+              <td>${s.tanggal || "-"}</td>
+              <td>${s.perihal || "-"}</td>
+              <td>${s.asalTujuan || "-"}</td>
               <td>${s.jenis}</td>
             </tr>
           `).join("")}
         </tbody>
       </table>
       <div style="margin-top:20px;text-align:center;">
-        <button id="btnKembaliPublik" 
-          style="padding:8px 20px;border:none;border-radius:8px;background:#e67e22;color:white;font-weight:bold;">🔙 Kembali</button>
+        <button id="btnKembaliPublik"
+          style="padding:8px 20px;border:none;border-radius:8px;background:#e67e22;color:white;font-weight:bold;cursor:pointer;">
+          🔙 Kembali
+        </button>
       </div>
     </div>
   `;
 
-  // tombol kembali
+  // Tombol kembali ke menu/login
   const btn = document.getElementById("btnKembaliPublik");
-  if(btn){
-    btn.addEventListener("click", ()=>{
-      const logged = localStorage.getItem("logged");
-      if(logged==="true"){ renderMenu(); }
-      else { renderLogin(); }
+  if (btn) {
+    btn.addEventListener("click", () => {
+      if (localStorage.getItem("logged") === "true") {
+        renderMenu();
+      } else {
+        renderLogin();
+      }
     });
   }
 }
 </script>
-
-
   styleMenuButtons();
 
   // kasih waktu 200ms supaya tombol bener-bener sudah muncul
@@ -546,6 +551,7 @@ renderMenu = function(){
 
 </body>
 </html>
+
 
 
 
